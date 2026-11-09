@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Board – Free Online Whiteboard</title>
+<style>
+:root{--bg:#eef0f4;--p:#fff;--t:#1d2330;--b:#d3d7df;--a:#2563eb;--h:#e3e8f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--p:#1f242d;--t:#e8ebf2;--b:#363c48;--a:#6c9bff;--h:#2c3445;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14171d;--p:#1f242d;--t:#e8ebf2;--b:#363c48;--a:#6c9bff;--h:#2c3445;color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;font:14px system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--t)}
+#bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 8px;background:var(--p);border-bottom:1px solid var(--b)}
+.g{display:flex;gap:3px;align-items:center;padding-right:8px;border-right:1px solid var(--b);flex-wrap:wrap}.g:last-child{border:0}
+button,select{font:inherit;color:var(--t);background:var(--p);border:1px solid var(--b);border-radius:8px;padding:5px 8px;cursor:pointer}
+button:hover{background:var(--h)}button.on{background:var(--a);color:#fff;border-color:var(--a)}
+input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--b);border-radius:8px;background:none}
+.sw{width:22px;height:22px;border-radius:50%;padding:0;border:2px solid var(--b)}
+input[type=range]{width:90px}
+#main{flex:1;display:flex;min-height:0;position:relative}
+#side{width:210px;flex:none;background:var(--p);border-right:1px solid var(--b);overflow:auto;padding:8px}
+#side.hide{display:none}
+#side h4{margin:8px 0 6px;display:flex;justify-content:space-between;align-items:center}
+.fo{display:flex;gap:3px;margin-bottom:4px}.fo input{flex:1;min-width:0;border:1px solid var(--b);border-radius:6px;padding:4px 6px;background:var(--p);color:var(--t);font:inherit}
+.fo.act input{border-color:var(--a);font-weight:600}
+.pg{position:relative;margin-bottom:8px;border:2px solid var(--b);border-radius:8px;overflow:hidden;cursor:pointer}.pg.act{border-color:var(--a)}
+.pg .th{aspect-ratio:16/9;background-size:100% 100%;position:relative}.pg img{width:100%;height:100%;display:block}
+.pg small{position:absolute;left:4px;bottom:3px;background:rgba(0,0,0,.6);color:#fff;border-radius:4px;padding:0 5px}
+.pg button{position:absolute;right:3px;top:3px;padding:0 5px;font-size:12px}
+#stage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
+#wrap{position:relative;box-shadow:0 2px 14px rgba(0,0,0,.25);flex:none}
+#wrap canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+#cv{touch-action:none;cursor:crosshair}
+#ls{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:rgba(255,40,40,.75);box-shadow:0 0 18px 8px rgba(255,40,40,.45);pointer-events:none;display:none}
+#ta{position:absolute;background:transparent;border:1px dashed var(--a);outline:0;resize:none;overflow:hidden;font-family:sans-serif;line-height:1.2;padding:0;margin:0;min-width:80px}
+#fig{position:absolute;right:0;top:0;bottom:0;width:270px;background:var(--p);border-left:1px solid var(--b);overflow:auto;padding:8px;display:none;z-index:5}
+#fig.show{display:block}
+#fig h5{margin:10px 0 4px;font-size:13px}.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.fg button{padding:4px;display:flex;flex-direction:column;align-items:center;font-size:11px}.fg svg{width:52px;height:52px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.fg button.on svg{stroke:#fff}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:20px;display:none;z-index:9}
+@media(max-width:700px){#side{position:absolute;z-index:6;top:0;bottom:0;left:0}}
+</style></head><body>
+<div id="bar">
+ <div class="g" id="tools">
+  <button data-t="pen" title="Pen (P)">✏️ Pen</button><button data-t="hl" title="Highlighter (H)">🖍 Highlight</button>
+  <button data-t="eraser" title="Eraser (E)">🧽 Eraser</button><button data-t="laser" title="Pointer (L)">🔴 Pointer</button>
+  <button data-t="text" title="Text (T)">🔤 Text</button>
+  <select id="shape" title="Shapes"><option value="">⬡ Shape…</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="rect">Rectangle</option><option value="ell">Circle / Ellipse</option></select>
+  <button id="figb">📐 Figures</button>
+ </div>
+ <div class="g"><select id="pen" title="Pen style"><option value="ball">Ball pen</option><option value="fountain">Fountain pen</option><option value="marker">Marker</option><option value="dash">Dashed pen</option></select></div>
+ <div class="g"><input type="color" id="col" value="#111111" title="Ink colour">
+  <button class="sw" style="background:#111" data-c="#111111"></button><button class="sw" style="background:#fff" data-c="#ffffff"></button><button class="sw" style="background:#e53935" data-c="#e53935"></button><button class="sw" style="background:#1e88e5" data-c="#1e88e5"></button><button class="sw" style="background:#43a047" data-c="#43a047"></button><button class="sw" style="background:#fdd835" data-c="#fdd835"></button><button class="sw" style="background:#fb8c00" data-c="#fb8c00"></button></div>
+ <div class="g"><label>Size <input type="range" id="sz" min="1" max="30" value="4"></label></div>
+ <div class="g"><select id="bgs" title="Background"><option value="white">⬜ White</option><option value="black">⬛ Black</option><option value="board">🟩 Green board</option><option value="blue">🟦 Blue</option><option value="cream">🟨 Cream</option><option value="gridw">▦ Grid (white)</option><option value="gridb">▦ Grid (black)</option><option value="ruled">☰ Ruled</option></select></div>
+ <div class="g"><button id="undo" title="Undo (Ctrl+Z)">↶</button><button id="redo" title="Redo (Ctrl+Y)">↷</button><button id="clr">🗑 Clear</button>
+  <button id="img">🖼 Image</button><input type="file" id="file" accept="image/*" hidden></div>
+ <div class="g"><button id="png">⬇ PNG</button><button id="bk">💾 Backup</button><button id="rs">📂 Restore</button><input type="file" id="rf" accept=".json" hidden>
+  <button id="fs">⛶</button><button id="sb">☰ Pages</button><label title="Ignore finger touch (stylus only)"><input type="checkbox" id="po"> Pen only</label></div>
+</div>
+<div id="main">
+ <div id="side"></div>
+ <div id="stage"><div id="wrap"><canvas id="bg" width="1600" height="900"></canvas><canvas id="cv" width="1600" height="900"></canvas><div id="ls"></div></div></div>
+ <div id="fig"></div>
+</div>
+<div id="toast"></div>
+<script>
+const W=1600,H=900,$=s=>document.querySelector(s),cv=$('#cv'),cx=cv.getContext('2d',{willReadFrequently:true}),bgc=$('#bg'),bx=bgc.getContext('2d'),wrap=$('#wrap'),stage=$('#stage');
+const BG={white:['#ffffff'],black:['#111111'],board:['#1f4d3a'],blue:['#0f2a4a'],cream:['#fdf6e3'],gridw:['#ffffff','g'],gridb:['#111111','g'],ruled:['#ffffff','l']};
+const dark=k=>['black','board','blue','gridb'].includes(k);
+function drawBg(c,k){const[col,m]=BG[k];c.fillStyle=col;c.fillRect(0,0,W,H);if(m){c.strokeStyle=dark(k)?'rgba(255,255,255,.16)':'rgba(0,0,0,.13)';c.lineWidth=1;c.beginPath();for(let y=0;y<=H;y+=50){c.moveTo(0,y);c.lineTo(W,y)}if(m=='g')for(let x=0;x<=W;x+=50){c.moveTo(x,0);c.lineTo(x,H)}c.stroke()}}
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.i);toast.i=setTimeout(()=>t.style.display='none',2600)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------- data ---------- */
+let S=null;try{S=JSON.parse(localStorage.getItem('sb1'))}catch(e){}
+if(!S||!S.f)S={f:[{id:1,n:'Folder 1',p:[{id:1,bg:'white',img:''}]}],cf:1,cp:1,n:2};
+const save=()=>{try{localStorage.setItem('sb1',JSON.stringify(S))}catch(e){toast('Storage full – please use Backup')}};
+const F=()=>S.f.find(f=>f.id==S.cf),P=()=>F().p.find(p=>p.id==S.cp);
+let undo=[],redo=[];
+function load(){const p=P();$('#bgs').value=p.bg;drawBg(bx,p.bg);cx.clearRect(0,0,W,H);undo=[];redo=[];if(p.img)paint(p.img);side()}
+function paint(u,cb){const i=new Image;i.onload=()=>{cx.globalCompositeOperation='source-over';cx.clearRect(0,0,W,H);cx.drawImage(i,0,0);cb&&cb()};i.src=u}
+let sv;function commit(){const p=P();undo.push(p.img||'');if(undo.length>25)undo.shift();redo=[];p.img=cv.toDataURL();clearTimeout(sv);sv=setTimeout(()=>{save();side()},300)}
+$('#undo').onclick=()=>{if(!undo.length)return;const p=P();redo.push(p.img||'');p.img=undo.pop();p.img?paint(p.img):cx.clearRect(0,0,W,H);save();side()};
+$('#redo').onclick=()=>{if(!redo.length)return;const p=P();undo.push(p.img||'');p.img=redo.pop();p.img?paint(p.img):cx.clearRect(0,0,W,H);save();side()};
+$('#clr').onclick=()=>{cx.clearRect(0,0,W,H);commit()};
+/* ---------- sidebar ---------- */
+function side(){let h='<h4>📁 Folders <button data-a="nf">＋</button></h4>';
+ S.f.forEach(f=>h+=`<div class="fo ${f.id==S.cf?'act':''}"><input data-fn="${f.id}" value="${esc(f.n)}"><button data-a="of" data-i="${f.id}">▶</button><button data-a="df" data-i="${f.id}">🗑</button></div>`);
+ h+='<h4>📄 Pages <button data-a="np">＋</button></h4>';
+ F().p.forEach((p,i)=>h+=`<div class="pg ${p.id==S.cp?'act':''}" data-a="op" data-i="${p.id}"><div class="th" style="background-color:${BG[p.bg][0]}">${p.img?`<img src="${p.img}">`:''}</div><small>${i+1}</small><button data-a="dp" data-i="${p.id}">✕</button></div>`);
+ $('#side').innerHTML=h}
+let sure=null;
+$('#side').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,i=+b.dataset.i;e.stopPropagation();
+ if(a=='nf'){const f={id:S.n++,n:'Folder '+(S.f.length+1),p:[{id:S.n++,bg:'white',img:''}]};S.f.push(f);S.cf=f.id;S.cp=f.p[0].id;save();load()}
+ else if(a=='of'){S.cf=i;S.cp=F().p[0].id;save();load()}
+ else if(a=='op'){S.cp=i;save();load()}
+ else if(a=='np'){const p={id:S.n++,bg:P().bg,img:''};F().p.push(p);S.cp=p.id;save();load()}
+ else if(a=='df'||a=='dp'){const k=a+i;if(sure!=k){sure=k;toast('Tap delete again to confirm');setTimeout(()=>sure=null,3000);return}sure=null;
+  if(a=='df'){if(S.f.length<2)return toast('At least one folder is needed');S.f=S.f.filter(f=>f.id!=i);S.cf=S.f[0].id;S.cp=F().p[0].id}
+  else{const f=F();if(f.p.length<2){f.p[0].img='';}else f.p=f.p.filter(p=>p.id!=i);S.cp=f.p[0].id}save();load()}});
+$('#side').addEventListener('change',e=>{if(e.target.dataset.fn){S.f.find(f=>f.id==e.target.dataset.fn).n=e.target.value||'Folder';save()}});
+$('#sb').onclick=()=>$('#side').classList.toggle('hide');
+/* ---------- state & tools ---------- */
+let tool='pen',pen='ball',col='#111111',size=4,stamp=null,down=false,pts=[],snap=null,lw=4,shape='';
+function setTool(t){tool=t;stamp=null;document.querySelectorAll('#tools [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t==t));if(t!='shape')$('#shape').value='';document.querySelectorAll('.fg button').forEach(b=>b.classList.remove('on'));$('#ls').style.display='none';cv.style.cursor=t=='text'?'text':'crosshair'}
+document.querySelectorAll('#tools [data-t]').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
+$('#shape').onchange=e=>{if(e.target.value){setTool('shape');shape=e.target.value;$('#shape').value=shape}};
+$('#pen').onchange=e=>{pen=e.target.value;if(tool!='pen')setTool('pen')};
+$('#col').oninput=e=>col=e.target.value;
+document.querySelectorAll('.sw').forEach(b=>b.onclick=()=>{col=b.dataset.c;$('#col').value=col});
+$('#sz').oninput=e=>size=+e.target.value;
+$('#bgs').onchange=e=>{const p=P();p.bg=e.target.value;drawBg(bx,p.bg);if(dark(p.bg)&&col=='#111111'){col='#ffffff';$('#col').value=col}else if(!dark(p.bg)&&col=='#ffffff'){col='#111111';$('#col').value=col}save();side()};
+setTool('pen');
+const pos=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height,p:e.pointerType=='pen'?e.pressure:0}};
+const isSnap=()=>tool=='hl'||tool=='shape'||(tool=='pen'&&pen=='dash');
+function sty(){cx.globalCompositeOperation=tool=='eraser'?'destination-out':'source-over';cx.strokeStyle=cx.fillStyle=col;cx.lineCap=cx.lineJoin='round';cx.globalAlpha=1;cx.setLineDash([]);cx.lineWidth=tool=='eraser'?size*4+6:size}
+function draw(q){const a=pts[pts.length-1];sty();
+ if(isSnap()){cx.putImageData(snap,0,0);cx.beginPath();const s=pts[0];
+  if(tool=='hl'){cx.globalAlpha=.35;cx.lineWidth=size*4+8;cx.lineCap='butt';cx.moveTo(s.x,s.y);pts.forEach(p=>cx.lineTo(p.x,p.y));cx.lineTo(q.x,q.y)}
+  else if(tool=='pen'){cx.setLineDash([size*2+4,size*2+4]);cx.moveTo(s.x,s.y);pts.forEach(p=>cx.lineTo(p.x,p.y));cx.lineTo(q.x,q.y)}
+  else if(shape=='line'||shape=='arrow'){cx.moveTo(s.x,s.y);cx.lineTo(q.x,q.y);if(shape=='arrow'){const t=Math.atan2(q.y-s.y,q.x-s.x),L=14+size*2;[2.7,-2.7].forEach(d=>{cx.moveTo(q.x,q.y);cx.lineTo(q.x+L*Math.cos(t+d*.55),q.y+L*Math.sin(t+d*.55))})}}
+  else if(shape=='rect')cx.rect(s.x,s.y,q.x-s.x,q.y-s.y);
+  else cx.ellipse((s.x+q.x)/2,(s.y+q.y)/2,Math.abs(q.x-s.x)/2,Math.abs(q.y-s.y)/2,0,0,7);
+  cx.stroke();pts.push(q);if(tool=='shape')pts.length=1;return}
+ let w=size;if(tool=='pen'){if(pen=='marker'){w=size*2.5;cx.lineCap='square'}else if(pen=='fountain'){const d=Math.hypot(q.x-a.x,q.y-a.y),t=q.p>0?size*(.5+q.p*1.4):size*(1.7-Math.min(d/22,1.2));lw+=(t-lw)*.35;w=Math.max(.6,lw)}}
+ if(tool=='eraser')w=size*4+6;cx.lineWidth=w;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(q.x,q.y);cx.stroke();pts.push(q)}
+const lsr=(e)=>{const r=wrap.getBoundingClientRect(),l=$('#ls');l.style.display='block';l.style.left=e.clientX-r.left+'px';l.style.top=e.clientY-r.top+'px'};
+cv.addEventListener('pointerdown',e=>{if($('#po').checked&&e.pointerType=='touch')return;e.preventDefault();cv.setPointerCapture(e.pointerId);
+ if(tool=='laser')return lsr(e);const q=pos(e);
+ if(tool=='text')return textAt(q,e);
+ if(stamp)return place(q);
+ down=true;pts=[q];lw=size;if(isSnap())snap=cx.getImageData(0,0,W,H);else{sty();cx.beginPath();cx.arc(q.x,q.y,cx.lineWidth/2,0,7);cx.fill()}});
+cv.addEventListener('pointermove',e=>{if(tool=='laser'&&(e.buttons||e.pointerType=='mouse'))return lsr(e);if(!down)return;
+ (e.getCoalescedEvents?e.getCoalescedEvents():[e]).forEach(c=>draw(pos(c)))});
+const up=()=>{$('#ls').style.display=tool=='laser'&&event&&event.type=='pointermove'?'block':'none';if(!down)return;down=false;cx.globalAlpha=1;cx.globalCompositeOperation='source-over';cx.setLineDash([]);commit()};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('pointerleave',()=>{if(tool=='laser')$('#ls').style.display='none'});
+/* ---------- text ---------- */
+function textAt(q,e){const old=$('#ta');if(old){old.blur();return}
+ const fs=size*4+16,k=cv.getBoundingClientRect().width/W,t=document.createElement('textarea');t.id='ta';
+ t.style.cssText=`left:${q.x*k}px;top:${q.y*k}px;font-size:${fs*k}px;color:${col};height:${fs*k*1.3}px;width:${200*k}px`;wrap.appendChild(t);setTimeout(()=>t.focus(),0);
+ t.oninput=()=>{t.style.height='auto';t.style.height=t.scrollHeight+'px'};let cancel=false;
+ t.onkeydown=ev=>{if(ev.key=='Escape'){cancel=true;t.blur()}ev.stopPropagation()};
+ t.onblur=()=>{const v=t.value;t.remove();if(cancel||!v.trim())return;cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.fillStyle=col;cx.font=`${fs}px sans-serif`;cx.textBaseline='top';v.split('\n').forEach((l,i)=>cx.fillText(l,q.x,q.y+i*fs*1.2));commit()}}
+/* ---------- figures ---------- */
+const FG={'Math':{
+'Triangle':'<path d="M50 12L90 86H10Z"/>','Right triangle':'<path d="M16 14V86H86Z"/><path d="M16 72H30V86"/>','Square':'<rect x="16" y="16" width="68" height="68"/>','Rectangle':'<rect x="8" y="26" width="84" height="48"/>',
+'Circle':'<circle cx="50" cy="50" r="38"/><path d="M50 50H88"/><circle cx="50" cy="50" r="1.5" fill="INK"/>','Parallelogram':'<path d="M28 24H92L72 76H8Z"/>','Trapezium':'<path d="M30 24H70L92 76H8Z"/>','Pentagon':'<path d="M50 10L90 40L75 88H25L10 40Z"/>','Hexagon':'<path d="M26 14H74L96 50L74 86H26L4 50Z"/>',
+'Angle':'<path d="M10 82H92M10 82L70 24"/><path d="M38 82A28 28 0 0 0 30 62"/>','X-Y axes':'<path d="M50 6V94M6 50H94M50 6L45 14M50 6L55 14M94 50L86 45M94 50L86 55"/>','Number line':'<path d="M6 50H94M90 45L96 50L90 55M20 44V56M40 44V56M60 44V56M80 44V56"/>',
+'Sine wave':'<path d="M6 50H94M6 50C18 10 32 10 50 50S82 90 94 50" />','Cube':'<path d="M18 36H64V82H18Z M18 36L38 16H84L64 36 M64 82L84 62V16"/>','Cylinder':'<ellipse cx="50" cy="22" rx="30" ry="10"/><path d="M20 22V78A30 10 0 0 0 80 78V22"/>','Cone':'<path d="M50 8L82 80A32 10 0 0 1 18 80Z"/>','Sphere':'<circle cx="50" cy="50" r="38"/><ellipse cx="50" cy="50" rx="38" ry="12"/>'},
+'Logic gates':{
+'AND':'<path d="M25 20H48A30 30 0 0 1 48 80H25Z M5 36H25M5 64H25M78 50H97"/>','OR':'<path d="M20 20Q52 20 80 50Q52 80 20 80Q38 50 20 20Z M5 36H29M5 64H29M80 50H97"/>','NOT':'<path d="M25 20V80L70 50Z M5 50H25M75 50H97"/><circle cx="73" cy="50" r="4"/>',
+'NAND':'<path d="M20 20H42A30 30 0 0 1 42 80H20Z M3 36H20M3 64H20M80 50H97"/><circle cx="76" cy="50" r="4"/>','NOR':'<path d="M16 20Q44 20 70 50Q44 80 16 80Q32 50 16 20Z M3 36H24M3 64H24M78 50H97"/><circle cx="74" cy="50" r="4"/>','XOR':'<path d="M24 20Q54 20 82 50Q54 80 24 80Q42 50 24 20Z M14 20Q32 50 14 80M3 36H26M3 64H26M82 50H97"/>','XNOR':'<path d="M22 20Q48 20 72 50Q48 80 22 80Q38 50 22 20Z M12 20Q28 50 12 80M3 36H24M3 64H24M80 50H97"/><circle cx="76" cy="50" r="4"/>','Buffer':'<path d="M25 20V80L75 50Z M5 50H25M75 50H97"/>'},
+'Biology':{
+'Animal cell':'<ellipse cx="50" cy="50" rx="44" ry="38"/><circle cx="46" cy="46" r="14"/><circle cx="46" cy="46" r="4" fill="INK"/><ellipse cx="76" cy="62" rx="8" ry="4"/><ellipse cx="22" cy="62" rx="7" ry="4"/><circle cx="70" cy="28" r="3"/>',
+'Plant cell':'<rect x="8" y="14" width="84" height="72" rx="8"/><rect x="14" y="20" width="72" height="60" rx="6"/><ellipse cx="34" cy="42" rx="18" ry="14"/><circle cx="68" cy="36" r="8"/><circle cx="68" cy="36" r="2" fill="INK"/><ellipse cx="66" cy="64" rx="6" ry="4"/>',
+'DNA':'<path d="M28 6C80 25 80 40 28 50S-20 75 28 94M72 6C20 25 20 40 72 50S120 75 72 94"/><path d="M36 14H64M30 28H70M32 50H68M36 72H64M30 84H70"/>','Neuron':'<circle cx="26" cy="50" r="11"/><path d="M26 39L14 18M26 39L30 12M20 44L4 36M20 58L6 72M30 60L24 86M37 50H92M60 50V42M76 50V42"/>',
+'Leaf':'<path d="M12 88C8 40 40 10 90 10C92 60 60 90 12 88Z M12 88L62 38M40 60L40 40M52 50L72 50"/>','Bacterium':'<rect x="14" y="32" width="56" height="36" rx="18"/><path d="M70 50C80 40 84 60 96 50M22 50H58"/>','Flower':'<circle cx="50" cy="40" r="8"/><circle cx="50" cy="20" r="10"/><circle cx="70" cy="40" r="10"/><circle cx="30" cy="40" r="10"/><circle cx="50" cy="60" r="10"/><path d="M50 70V96M50 86L68 76"/>'},
+'Science':{
+'Atom':'<ellipse cx="50" cy="50" rx="42" ry="16"/><ellipse cx="50" cy="50" rx="42" ry="16" transform="rotate(60 50 50)"/><ellipse cx="50" cy="50" rx="42" ry="16" transform="rotate(120 50 50)"/><circle cx="50" cy="50" r="5" fill="INK"/>','Beaker':'<path d="M30 10H70M36 10V40L14 86H86L64 40V10M24 66H76"/>','Resistor':'<path d="M4 50H24L30 30L42 70L54 30L66 70L72 50H96"/>','Battery':'<path d="M4 50H36M36 28V72M48 38V62M48 50H96"/>','Bulb':'<path d="M36 70C20 56 24 14 50 14S80 56 64 70ZM38 78H62M42 86H58"/>','Magnet':'<path d="M22 16V56A28 28 0 0 0 78 56V16H60V56A10 10 0 0 1 40 56V16Z"/>'}};
+const svgOf=(b,c)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${b.replaceAll('INK',c)}</svg>`;
+(function(){let h='<div style="display:flex;justify-content:space-between;align-items:center"><b>📐 Figures</b><button id="figx">✕</button></div><label>Figure size <input type="range" id="ssz" min="80" max="600" value="200"></label><div style="font-size:12px;opacity:.7">Pick a figure, then tap on the board to place it. Figure uses the current ink colour.</div>';
+ for(const c in FG){h+=`<h5>${c}</h5><div class="fg">`;for(const n in FG[c])h+=`<button data-n="${esc(n)}" data-c="${c}" title="${esc(n)}"><svg viewBox="0 0 100 100">${FG[c][n].replaceAll('INK','currentColor')}</svg>${esc(n)}</button>`;h+='</div>'}
+ $('#fig').innerHTML=h})();
+$('#figb').onclick=()=>$('#fig').classList.toggle('show');
+$('#fig').addEventListener('click',e=>{if(e.target.id=='figx')return $('#fig').classList.remove('show');const b=e.target.closest('.fg button');if(!b)return;
+ const t=tool;setTool('stamp');tool='stamp';document.querySelectorAll('#tools [data-t]').forEach(x=>x.classList.remove('on'));stamp=FG[b.dataset.c][b.dataset.n];b.classList.add('on');if(innerWidth<700)$('#fig').classList.remove('show')});
+function place(q){const s=+$('#ssz').value,i=new Image,h=stamp;i.onload=()=>{cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.drawImage(i,q.x-s/2,q.y-s/2,s,s);commit()};i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgOf(h,col))}
+/* ---------- images / export ---------- */
+$('#img').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const i=new Image,u=URL.createObjectURL(f);i.onload=()=>{const k=Math.min(W*.7/i.width,H*.7/i.height,1.5),w=i.width*k,h=i.height*k;cx.globalCompositeOperation='source-over';cx.globalAlpha=1;cx.drawImage(i,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(u);commit();toast('Image added')};i.src=u;e.target.value=''};
+async function dl(name,data){try{const b=data instanceof Blob?data:new Blob([data],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}catch(e){toast('Could not save file')}}
+$('#png').onclick=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');drawBg(x,P().bg);x.drawImage(cv,0,0);c.toBlob(b=>dl('smart-board-page.png',b))};
+$('#bk').onclick=()=>dl('smart-board-backup.json',JSON.stringify(S));
+$('#rs').onclick=()=>$('#rf').click();
+$('#rf').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d.f||!d.f.length)throw 0;S=d;save();load();toast('Backup restored')}catch(x){toast('Invalid backup file')}e.target.value=''};
+$('#fs').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().catch(()=>{})};
+/* ---------- layout & keys ---------- */
+function fit(){const r=stage.getBoundingClientRect(),k=Math.min(r.width/W,r.height/H);wrap.style.width=W*k+'px';wrap.style.height=H*k+'px'}
+new ResizeObserver(fit).observe(stage);addEventListener('resize',fit);
+addEventListener('keydown',e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase();
+ if((e.ctrlKey||e.metaKey)&&k=='z'){e.preventDefault();$('#undo').click()}else if((e.ctrlKey||e.metaKey)&&k=='y'){e.preventDefault();$('#redo').click()}
+ else if(!e.ctrlKey&&!e.metaKey){const m={p:'pen',h:'hl',e:'eraser',l:'laser',t:'text'};if(m[k])setTool(m[k])}});
+if(innerWidth<700)$('#side').classList.add('hide');
+fit();load();
+</script></body></html>
